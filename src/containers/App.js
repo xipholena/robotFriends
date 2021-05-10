@@ -4,46 +4,45 @@ import SearchBox from '../components/SearchBox';
 import Scroll from '../components/Scroll';
 import ErrorBoundry from '../components/ErrorBoundry';
 import {connect} from 'react-redux';
-import {setSearchField} from '../actions';
+import {setSearchField, requestRobots} from '../actions';
 
 
 const mapStateToProps = state => {
     return {
-        searchField: state.searchField || '' //can be undefined
+        searchField: state.searchRobots.searchField || '' ,//can be undefined
+        robots: state.requestRobots.robots,
+        isPending: state.requestRobots.isPending,
+        error: state.requestRobots.error,
     }
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        onSearchChange: (event) => dispatch(setSearchField(event.target.value)) //key name equals to method in App
+        onSearchChange: (event) => dispatch(setSearchField(event.target.value)), //key name equals to reducer, ex method in App,
+        onRequestRobots: () => dispatch(requestRobots()) //equals to reducer
     }
 }
 class App extends Component {
-
-    constructor () {
-        super();
-        this.state = {
-            robots: [],
-        }
-    }
+    //initialState is in reducers.js
     componentDidMount() {
-        fetch('https://jsonplaceholder.typicode.com/users')
-            .then(response => response.json())
-            .then(users => this.setState({robots: users}))
+        this.props.onRequestRobots();
     }
 
 
     render() {
+        //console.log(this.props.store.getState())
+        //alert('App rendered')
 
-        const {robots} = this.state;
-        const {searchField, onSearchChange} = this.props;
-        console.log(searchField, robots)
+        const {searchField, onSearchChange, robots, isPending, error} = this.props;
         const filteredRobots = robots.filter( robot => {
             return robot.name.toLowerCase().includes(searchField.toLowerCase())
         })
-        console.log('filteredRobots', filteredRobots)
-        if (!robots.length) {
+
+        if (isPending) {
             return <h1 className="f1 light-green">Loading robots...</h1>
-        } else {
+        }
+        if (error) {
+            return <h1 className="f1 light-green">Something went wrong...</h1>
+        }else {
             return (
                 <div className="tc">
                     <h1 className="f1 light-green">RoboFriends</h1>
